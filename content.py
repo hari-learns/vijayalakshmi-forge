@@ -74,6 +74,7 @@ NAV = [
     ("customers.html", "Customers"),
     ("about.html", "About"),
     ("gallery.html", "Gallery"),
+    ("blog.html", "Blog"),
 ]
 CONTACT_PAGE = ("contact.html", "Contact")
 
@@ -321,7 +322,99 @@ META = {
     "capabilities": 'Bandsaw cutting to 350 mm, hammer forging to 3.5 ton, CNC and VMC machining, MPI and an in-house lab.',
     "customers": 'Customers include TI India, Wheels India, MEI, Schwing Stetter and Flowserve, with supplier awards since 2007.',
     "about": 'A Chennai forging company founded in 1988 by Mr. A. Kumar, with two forging plants and a machining sister concern in Ambattur.',
-    "gallery": 'Photographs of the forging shop, machining floor and lab.',
+    "gallery": 'Photographs of the forging shop, hammer line, machining floor and lab at Vijayalakshmi Forge & Stamping, Ambattur.',
     "contact": 'Send a drawing or a part number to Vijayalakshmi Forge and Stamping and get a quote.',
     "404": 'Page not found.',
 }
+
+# ----------------------------------------------------------------- loader ----
+# The first visit of a session opens on the mark: the hammer strikes a hot
+# billet three times and the letters are stamped out of it.
+LOADER_NAME = NAME
+LOADER_LINE = "Forging since 1988 · Ambattur, Chennai"
+
+# ----------------------------------------------------------------- finder ----
+# The row under the hero. Words a buyer might type, matched to the four
+# families. Keywords come from the part names on the company's posters.
+FINDER_TITLE = "Tell us the part. We will point you to the right line."
+FINDER_LABELS = {
+    "free": "Describe the part",
+    "use": "What it goes into",
+    "material": "Material",
+    "have": "What you can send",
+}
+FINDER_PLACEHOLDER = "e.g. drag chain link, alloy steel, 2,000 a month"
+FINDER_USE = [("", "Any machine"), ("conveyor-chains", "Conveyor and chain lines"),
+              ("mixer-spares", "Concrete mixers and pumps"),
+              ("undercarriage", "Excavators and loaders"),
+              ("earth-moving", "Earth-moving fleets")]
+FINDER_MATERIALS = ["Not sure yet", "Carbon steel", "Alloy steel", "Stainless steel"]
+FINDER_HAVE = ["A drawing", "A sample part", "A part number", "Only a description"]
+FINDER_KEYWORDS = {
+    "conveyor-chains": ["chain", "conveyor", "link", "drag", "scraper", "block",
+                        "attachment", "side bar", "sidebar", "cement", "bulk", "mining", "pin"],
+    "mixer-spares": ["mixer", "concrete", "roller", "eye bolt", "eyebolt", "wear plate",
+                     "plate", "ring", "pump", "clamp", "coupling", "stetter", "transit"],
+    "undercarriage": ["excavator", "loader", "undercarriage", "cylinder", "hydraulic",
+                      "rod end", "rod", "clevis", "eye", "bush", "bushing", "housing",
+                      "sprocket", "jcb"],
+    "earth-moving": ["earth", "earthmoving", "earth-moving", "dozer", "fleet", "idler",
+                     "sprocket", "disc", "disk", "ring", "replacement", "spare", "spares"],
+}
+FINDER_FACT_LABELS = ("Includes", "Made by", "Steel", "Quoted from")
+FINDER_FACT_MADE = "Hot forging, then machining"
+FINDER_FACT_STEEL = "Carbon, alloy and stainless"
+FINDER_FACT_FROM = "Your drawing, sample or part number"
+FINDER_NOTE = ("The team confirms the right process and grade when they quote. "
+               "Nothing is sent until you press a button.")
+FINDER_NONE = "No exact match for those words. Here is everything we forge; the team will place your part."
+FINDER_QUOTE = "Quote this"
+FINDER_DETAILS = "See the range"
+FINDER_SUM = "Send this to the team"
+FINDER_WA_INTRO = "Hello Vijayalakshmi Forge & Stamping, I need a quote."
+# labels used inside the quote message itself
+FINDER_MSG = {"free": "Part", "use": "Goes into", "range": "Likely range",
+              "material": "Material", "have": "I can send"}
+
+# -------------------------------------------------------------------- SEO ----
+# Search engines and AI assistants. All of this goes live with the domain.
+INDEXNOW_KEY = "6328c1368c3ce844dcdf14628c1c3a1b"
+OG_IMAGE = "assets/img/p-chain-02.webp"
+GEO_AREA = ["Ambattur", "Chennai", "Thiruvallur", "Tamil Nadu", "India"]
+KNOWS_ABOUT = ["Hot forging", "Closed die forging", "Hammer forging", "Stamping",
+               "CNC machining", "Conveyor chain components", "Concrete mixer spares",
+               "Excavator undercarriage parts", "Earth-moving equipment spares",
+               "Magnetic particle inspection"]
+LLMS_SUMMARY = (
+    "Vijayalakshmi Forge & Stamping (VLF) is a hot forging and stamping company "
+    "in Ambattur, Chennai, India, founded in 1988 by Mr. A. Kumar. It forges "
+    "carbon, alloy and stainless steel into heavy conveyor chain parts, concrete "
+    "mixer spares, excavator and loader undercarriage parts and earth-moving "
+    "replacement spares, made to the customer's drawing. It runs two forging "
+    "plants (TASS Industrial Estate, Ambattur, and SIDCO Industrial Estate, "
+    "Kakkalur, Thiruvallur) and a machining sister concern, K.K. Industries, in "
+    "Ambattur Industrial Estate. All three works are certified to ISO 9001:2015.")
+LLMS_FACTS = [
+    "Founded: 1988, Chennai, by Mr. A. Kumar (Managing Director). Mr. R. Ganesh is GM, Operations.",
+    "Certificates: ISO 9001:2015, Plant I by Intertek (ICH-0246.12, since 2006), Plant II by Intertek (0007923, since 2013), K.K. Industries by TUV SUD (99 100 03387, since 2007).",
+    "Equipment: bandsaw cutting up to 350 mm, shearing up to 125 mm, forging hammer up to 3.5 ton, bogie and bell furnace, shot blasting, CNC and VMC machining, magnetic particle inspection, a lab with a hardness tester and a metallurgical microscope.",
+    "Customers include TI India (TIDC), Wheels India Limited, Essae, Madras Engineering Industries, Schwing Stetter, Flowserve, Burder AG Attachments and Texel.",
+    "Awards: Best Supplier of the Year, Sundram Fasteners (2007); Quality Excellence Award, Madras Engineering Industries (2015); Best Supplier Award, TIDC India (2020-21); Supplier Quality Excellence Award, Madras Engineering Industries (2021-22).",
+    "Enquiries: +91 98404 07255, +91 98403 24470, vijakunit2@gmail.com. Send a drawing, a sample or a part number for a quote.",
+]
+
+# ------------------------------------------------------------------- blog ----
+# Posts are Markdown files in posts/ with a small header (title, date,
+# description, image). build.py turns each one into blog/<slug>.html.
+H_BLOG = "Blog"
+BLOG_INTRO = ("Notes from the forge: how parts are made, what to ask a "
+              "supplier, and what to send for a fast quote.")
+BLOG_BY = "Vijayalakshmi Forge & Stamping"
+BLOG_MORE = "Read the article"
+BLOG_BACK = "All articles"
+BLOG_CTA_TITLE = "Need a part like this forged?"
+BLOG_CTA_TEXT = "Send a drawing, a sample or a part number. We will quote against it."
+H_BLOG_HOME = "From the blog"
+BLOG_HOME_INTRO = "Short, practical reads for buyers of forged parts."
+META["blog"] = ("Articles on hot forging, conveyor chain parts, earth-moving "
+                "spares and how to send a forging enquiry, from a Chennai forge.")

@@ -16,3 +16,11 @@
 - The poster says "35 Years Celebrating"; the site says "Since 1988".
 - Domain: vijlakforge.com (the poster's "vijlakforg.com" is a typo).
 - Per-item product names (the site shows families, not part names).
+- The finder under the hero matches words to product families. The word lists
+  (content.FINDER_KEYWORDS) were written from the poster part names: confirm or
+  add the words buyers actually use.
+- Three starter blog posts in posts/ are drafts written from the posters and
+  general forging practice. The client should read and approve them before
+  launch.
+- Google Business Profiles for Plant I, Plant II and K.K. Industries need the
+  owner's phone or postcard verification.

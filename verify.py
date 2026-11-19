@@ -76,7 +76,9 @@ for fg, bg, floor in [("text", "white", 7), ("muted", "white", 4.5),
         problems.append(f"contrast {fg} on {bg} is {r:.2f}, wants {floor}")
 
 # --- pages ------------------------------------------------------------
-pages = {os.path.basename(p): p for p in glob.glob(os.path.join(ROOT, "*.html"))}
+# keyed by path from the root: "about.html", "blog/some-post.html"
+pages = {os.path.relpath(p, ROOT): p
+         for p in glob.glob(os.path.join(ROOT, "*.html")) + glob.glob(os.path.join(ROOT, "blog", "*.html"))}
 ids = {}
 parsed = {}
 for name, path in pages.items():
@@ -88,15 +90,20 @@ for name, path in pages.items():
         problems.append(f"{name}: {p.h1} h1 tags")
     if not p.title or not p.desc:
         problems.append(f"{name}: missing title or description")
+    if not 30 <= len(p.title) <= 70 and name != "404.html":
+        problems.append(f"{name}: title is {len(p.title)} characters, wants 30 to 70")
+    if not 70 <= len(p.desc) <= 160 and name != "404.html":
+        problems.append(f"{name}: description is {len(p.desc)} characters, wants 70 to 160")
     for src, alt in p.imgs:
         if alt is None:
             problems.append(f"{name}: img without alt: {src}")
 
 for name, p in parsed.items():
+    here = os.path.dirname(name)
     for a in p.assets:
         if a.startswith(("http", "data:", "//")) or not a:
             continue
-        if not os.path.exists(os.path.join(ROOT, a.split("?")[0])):
+        if not os.path.exists(os.path.normpath(os.path.join(ROOT, here, a.split("?")[0]))):
             problems.append(f"{name}: missing asset {a}")
     for h in p.links:
         if h.startswith(("http", "mailto:", "tel:", "#")):
@@ -104,12 +111,22 @@ for name, p in parsed.items():
                 problems.append(f"{name}: dead anchor {h}")
             continue
         target, _, frag = h.partition("#")
-        target = target.split("?")[0]
-        key = "index.html" if target in ("./", "") else target + ".html"
+        target = os.path.normpath(os.path.join(here, target.split("?")[0] or "."))
+        key = "index.html" if target == "." else target + ".html"
         if key not in pages and not os.path.exists(os.path.join(ROOT, target)):
             problems.append(f"{name}: dead link {h}")
         elif frag and key in ids and frag not in ids[key]:
             problems.append(f"{name}: {h} has no anchor {frag}")
+
+# --- discovery files --------------------------------------------------------
+for f in ("robots.txt", "sitemap.xml", "llms.txt", C.INDEXNOW_KEY + ".txt"):
+    if not os.path.exists(os.path.join(ROOT, f)):
+        problems.append(f"missing {f}")
+sm = open(os.path.join(ROOT, "sitemap.xml")).read()
+for loc in re.findall(r"<loc>(.*?)</loc>", sm):
+    rel = loc[len(C.SITE_URL) + 1:] or "index"
+    if rel + ".html" not in pages:
+        problems.append(f"sitemap lists {loc}, no page for it")
 
 # --- content --------------------------------------------------------------
 for slug, *_ in C.PLANTS:

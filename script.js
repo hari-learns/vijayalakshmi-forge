@@ -121,6 +121,170 @@
     update();
   });
 
+  /* --------------------------------------------- loader and page change --- */
+  /* The loader is a CSS timeline (styles.css); this only tidies it away.
+     Leaving for another page of the site, the press shutter closes, and the
+     next page opens it (html.pt-in, set in <head>). */
+  var root = document.documentElement;
+  if (root.classList.contains("ld")) {
+    setTimeout(function () { var l = $("#ld"); if (l) l.remove(); }, 4100);
+  }
+  var pt = $("#pt");
+  var internal = function (a) {
+    if (!a || a.target === "_blank" || a.hasAttribute("download")) return false;
+    var href = a.getAttribute("href") || "";
+    if (!href || href.charAt(0) === "#" || /^(mailto|tel):/.test(href)) return false;
+    var u;
+    try { u = new URL(a.href, location.href); } catch (e) { return false; }
+    if (u.origin !== location.origin) return false;
+    if (u.pathname === location.pathname && u.search === location.search) return false;
+    return true;
+  };
+  if (pt && !reduced) {
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest("a");
+      if (!internal(a)) return;
+      e.preventDefault();
+      try { sessionStorage.setItem("vlf-pt", "1"); } catch (x) { /* private mode */ }
+      pt.classList.add("go");
+      setTimeout(function () { location.href = a.href; }, 620);
+    });
+  }
+  /* Back and forward restore the page from memory: open the shutter again */
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && pt) pt.classList.remove("go");
+  });
+  /* fetch a page as soon as the pointer or a finger heads for its link, so it
+     is ready when the shutter opens (browsers without speculation rules) */
+  var warmed = {};
+  var warm = function (e) {
+    var a = e.target.closest && e.target.closest("a");
+    if (!internal(a) || warmed[a.href]) return;
+    warmed[a.href] = 1;
+    var l = document.createElement("link");
+    l.rel = "prefetch"; l.href = a.href;
+    document.head.appendChild(l);
+  };
+  document.addEventListener("pointerover", warm, { passive: true });
+  document.addEventListener("touchstart", warm, { passive: true });
+
+  /* ------------------------------------------------------------ finder --- */
+  /* The buyer describes the part in their own words; the page names the
+     families that make it, says why, and writes the quote message. Nothing
+     is sent from here: the buttons open WhatsApp or the quote form. */
+  var fform = $("[data-finder]");
+  var fdata = $("#vlf-finder");
+  if (fform && fdata) {
+    var F = JSON.parse(fdata.textContent);
+    var said = $("[data-fsaid]"), res = $("[data-fres]"), sum = $("[data-fsum]");
+    var txt = $("[data-ftxt]"), fwa = $("[data-fwa]"), fto = $("[data-fform]");
+    var escH = function (t) {
+      return String(t).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    };
+    var norm = function (t) { return " " + t.toLowerCase().replace(/[^a-z0-9]+/g, " ") + " "; };
+    var vals = function () {
+      var d = new FormData(fform), o = {};
+      ["free", "use", "material", "have"].forEach(function (k) { o[k] = (d.get(k) || "").toString().trim(); });
+      return o;
+    };
+    var useName = function (slug) {
+      var opt = $('select[name="use"] option[value="' + slug + '"]', fform);
+      return opt ? opt.textContent : "";
+    };
+    var match = function (v) {
+      var words = norm(v.free);
+      var scored = F.families.map(function (f) {
+        var hits = f.words.filter(function (w) { return words.indexOf(" " + w + " ") > -1 || words.indexOf(" " + w + "s ") > -1; });
+        var score = hits.length * 2 + (v.use === f.slug ? 3 : 0);
+        return { f: f, hits: hits, score: score };
+      }).filter(function (r) { return r.score > 0; });
+      scored.sort(function (a, b) { return b.score - a.score; });
+      return scored;
+    };
+    var message = function (v, list) {
+      var L = F.labels, lines = [F.intro];
+      if (v.free) lines.push(L.free + ": " + v.free);
+      if (v.use) lines.push(L.use + ": " + useName(v.use));
+      if (list.length) lines.push(L.range + ": " + list.map(function (r) { return r.f.name; }).join(", "));
+      if (v.material && v.material !== "Not sure yet") lines.push(L.material + ": " + v.material);
+      if (v.have) lines.push(L.have + ": " + v.have);
+      return lines.filter(Boolean).join("\n");
+    };
+    var formLink = function (v, slug) {
+      var q = new URLSearchParams();
+      if (slug) q.set("family", slug);
+      if (v.free) q.set("part", v.free);
+      if (v.material && v.material !== "Not sure yet") q.set("material", v.material);
+      if (v.have) q.set("have", v.have);
+      return fto.getAttribute("href").split("?")[0].split("#")[0] + "?" + q.toString() + "#enquire";
+    };
+    var card = function (r, i, v) {
+      var f = r.f, why = r.hits.length ? "Fits: " + r.hits.slice(0, 3).join(", ") : (v.use === f.slug ? "Fits: " + useName(f.slug).toLowerCase() : "");
+      return '<article class="fcard" style="--i:' + i + '">' +
+        '<h3 class="fcard__t">' + escH(f.name) + "</h3>" +
+        (why ? '<p class="fcard__why">' + escH(why) + "</p>" : "") +
+        '<dl class="fcard__facts">' +
+        "<div><dt>" + F.facts[0] + "</dt><dd>" + escH(f.points.map(function (t, k) {
+          return k ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+        }).join(", ")) + "</dd></div>" +
+        "<div><dt>" + F.facts[1] + "</dt><dd>" + escH(F.made) + "</dd></div>" +
+        "<div><dt>" + F.facts[2] + "</dt><dd>" + escH(v.material && v.material !== "Not sure yet" ? v.material : F.steel) + "</dd></div>" +
+        "<div><dt>" + F.facts[3] + "</dt><dd>" + escH(v.have || F.from) + "</dd></div></dl>" +
+        '<div class="fcard__img"><img src="' + f.img + '" alt="' + escH(f.name) + '" loading="lazy"></div>' +
+        '<div class="fcard__act"><a class="btn btn--sm" href="' + formLink(v, f.slug) + '">' + F.quote + "</a>" +
+        '<a class="link" href="products.html#' + f.slug + '">' + F.details + "</a></div></article>";
+    };
+    var run = function (force) {
+      var v = vals();
+      var active = force || v.free || v.use;
+      if (!active) { res.innerHTML = ""; sum.hidden = true; said.textContent = ""; return; }
+      var list = match(v);
+      var loose = !list.length;
+      if (loose) list = F.families.map(function (f) { return { f: f, hits: [], score: 0 }; });
+      var bits = [];
+      if (v.free) bits.push("<b>" + escH(v.free) + "</b>");
+      if (v.use) bits.push("for <b>" + escH(useName(v.use).toLowerCase()) + "</b>");
+      if (v.material && v.material !== "Not sure yet" && v.free.toLowerCase().indexOf(v.material.toLowerCase()) < 0) {
+        bits.push("in <b>" + escH(v.material.toLowerCase()) + "</b>");
+      }
+      said.innerHTML = loose ? escH(F.none) :
+        "Looking for " + bits.join(" ") + ". " + (list.length === 1 ? "One line makes this." : list.length + " lines make parts like this.");
+      res.innerHTML = list.map(function (r, i) { return card(r, i, v); }).join("");
+      var msg = message(v, loose ? [] : list);
+      txt.textContent = msg;
+      fwa.href = "https://wa.me/" + F.wa + "?text=" + encodeURIComponent(msg);
+      fto.href = formLink(v, list.length === 1 ? list[0].f.slug : "");
+      sum.hidden = false;
+    };
+    var timer = 0;
+    fform.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(run, 260); });
+    fform.addEventListener("change", function () { run(); });
+    fform.addEventListener("submit", function (e) {
+      e.preventDefault();
+      run(true);
+      res.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+    });
+  }
+
+  /* ------------------------------------- quote form, filled from the finder --- */
+  var qf = $("[data-enquiry]");
+  if (qf && location.search) {
+    var q = new URLSearchParams(location.search);
+    var sel = $('select[name="product"]', qf), fam = q.get("family");
+    var opt = sel && fam && sel.querySelector('option[data-slug="' + fam.replace(/[^a-z-]/g, "") + '"]');
+    if (opt) opt.selected = true;
+    var mat = $('input[name="material"]', qf);
+    if (mat && q.get("material")) mat.value = q.get("material");
+    var msgEl = $('textarea[name="message"]', qf);
+    var parts = [];
+    if (q.get("part")) parts.push(q.get("part"));
+    if (q.get("have")) parts.push("I can send: " + q.get("have"));
+    if (msgEl && parts.length && !msgEl.value) msgEl.value = parts.join("\n");
+  }
+
   /* -------------------------------------------------------- validation --- */
   /* Indian numbers may be 10 digits, +91 and 10 digits, or 0 and 10 digits
      for a landline with its STD code; a leading + with another country code
