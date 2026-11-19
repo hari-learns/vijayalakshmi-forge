@@ -1,0 +1,8 @@
+build_src
+__pycache__
+.claude
+posts
+*.py
+BRIEF.md
+TODO_CLIENT.md
+README.md
